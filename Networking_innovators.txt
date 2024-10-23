@@ -1,0 +1,172 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+class Node {
+    int id;        // Storing id
+    String name;
+    Node next;
+    ArrayList<Integer> requests;     // It stores the connection requests of the user
+    ArrayList<Integer> connections;  // It stores the accepted connections of the user
+
+    Node(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.next = null;
+        this.requests = new ArrayList<>();
+        this.connections = new ArrayList<>();
+    }
+}
+
+public class LinkedInProfile {
+    static HashMap<Integer, String> userMap = new HashMap<>();
+
+    public static Node insertion(int id, String name, Node head) {
+        if (head == null) return new Node(id, name);
+        head.next = insertion(id, name, head.next);
+        return head;
+    }
+
+    public static void display(Node head) {
+        if (head == null) return;
+        Node temp = head;
+        while (temp != null) {
+            System.out.println("UserProfile(User ID: " + temp.id + ", Name: " + temp.name + ")");
+            temp = temp.next;
+        }
+    }
+
+    public static boolean find(ArrayList<Integer> list, int id) {
+        return list.contains(id);
+    }
+
+    public static void requesting(int uid, int oid, Node head) {
+        Node temp = head;
+        while (temp.id != oid) {
+            temp = temp.next;
+        }
+        temp.requests.add(uid);
+    }
+
+    public static void connecting(int reqid, int accid, Node head) {
+        Node temp = head;
+        while (temp.id != reqid) {
+            temp = temp.next;
+        }
+        if (!find(temp.connections, accid)) {
+            temp.connections.add(accid);
+        }
+    }
+
+    public static void viewConnections(int lid, Node head) {
+        Node temp = head;
+        while (temp.id != lid) {
+            temp = temp.next;
+        }
+        if (temp.connections.isEmpty()) {
+            System.out.println("No connections");
+        } else {
+            for (int connectionId : temp.connections) {
+                System.out.println("UserProfile(User ID: " + connectionId + ", Name: " + userMap.get(connectionId) + ")");
+            }
+        }
+    }
+
+    public static void checkRequests(int cid, Node head) {
+        Node temp = head;
+        while (temp.id != cid) {
+            temp = temp.next;
+        }
+        if (temp.requests.isEmpty()) {
+            System.out.println("No requests");
+        } else {
+            Scanner scanner = new Scanner(System.in);
+            int n = temp.requests.size();
+            for (int i = 0; i < n; i++) {
+                System.out.println("Connection request from " + userMap.get(temp.requests.get(i)) + " to " + userMap.get(cid));
+                System.out.print("Do you want to accept the request from " + userMap.get(temp.requests.get(i)) + "? (y/n): ");
+                char key = scanner.next().charAt(0);
+                if (key == 'n') {
+                    temp.requests.remove(i);
+                    i--;
+                    n = temp.requests.size();
+                } else {
+                    if (!find(temp.connections, temp.requests.get(i))) {
+                        temp.connections.add(temp.requests.get(i));
+                    }
+                    connecting(temp.requests.get(i), cid, head);
+                    System.out.println(userMap.get(cid) + " is now connected with " + userMap.get(temp.requests.get(i)));
+                    temp.requests.remove(i);
+                    i--;
+                    n = temp.requests.size();
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Node head = null;
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("-----------------------------WELCOME TO LINKEDIN PROFILES-----------------------------");
+
+        while (true) {
+            System.out.println("\nLinkedIn profile connection");
+            System.out.println("1. Add Profile");
+            System.out.println("2. View Profile");
+            System.out.println("3. Send Connection Request");
+            System.out.println("4. Manage Connection Requests");
+            System.out.println("5. View Connections");
+            System.out.println("6. Close System");
+            System.out.print("\nEnter your choice: ");
+            int n = scanner.nextInt();
+
+            if (n == 6) {
+                System.out.println("Exiting the system");
+                break;
+            }
+
+            switch (n) {
+                case 1:
+                    System.out.print("\nEnter Id: ");
+                    int id = scanner.nextInt();
+                    while (userMap.containsKey(id)) {
+                        System.out.println("Id already exists. Enter a new Id: ");
+                        id = scanner.nextInt();
+                    }
+                    System.out.print("Enter your name: ");
+                    String name = scanner.next();
+                    userMap.put(id, name);
+                    head = insertion(id, name, head);
+                    System.out.println("**Profile for " + name + " added successfully.**");
+                    break;
+                case 2:
+                    display(head);
+                    break;
+                case 3:
+                    System.out.print("Enter your Id: ");
+                    int uid = scanner.nextInt();
+                    System.out.print("Enter User ID to send connection request: ");
+                    int oid = scanner.nextInt();
+                    if (userMap.containsKey(uid) && userMap.containsKey(oid)) {
+                        requesting(uid, oid, head);
+                        System.out.println("Connection request sent from " + userMap.get(uid) + " to " + userMap.get(oid));
+                    }
+                    break;
+                case 4:
+                    System.out.print("Enter your User ID to manage connection requests: ");
+                    int cid = scanner.nextInt();
+                    checkRequests(cid, head);
+                    break;
+                case 5:
+                    System.out.print("Enter your User ID to view connections: ");
+                    int lid = scanner.nextInt();
+                    System.out.println(userMap.get(lid) + "'s connections:");
+                    viewConnections(lid, head);
+                    break;
+                default:
+                    System.out.println("Enter a valid option.");
+            }
+        }
+        scanner.close();
+    }
+}
